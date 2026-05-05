@@ -10,6 +10,18 @@ try:
 except ImportError:  # Optional dependency
     pytesseract = None
 
+DEFAULT_FPS = 30
+REPORT_FIELDS = [
+    "event_type",
+    "match_time",
+    "timestamp_seconds",
+    "frame_index",
+    "ball_coordinates",
+    "scorer_track_id",
+    "scorer_jersey_number",
+    "video_file",
+]
+
 
 def get_scorer_candidate(ball_center, boxes, cls_ids, track_ids):
     min_dist = float("inf")
@@ -63,7 +75,7 @@ def analyze_video(
     goal_roi = goal_roi or [100, 350, 480, 580]
     model = YOLO(model_path)
     cap = cv2.VideoCapture(video_path)
-    fps = cap.get(cv2.CAP_PROP_FPS) or 30
+    fps = cap.get(cv2.CAP_PROP_FPS) or DEFAULT_FPS
     match_analysis_data = []
     last_goal_frame = -int(fps * cooldown_seconds)
     last_ball_inside = False
@@ -155,15 +167,11 @@ def analyze_video(
     with open(output_json, "w") as f:
         json.dump(match_analysis_data, f, indent=4)
 
-    if match_analysis_data:
-        keys = match_analysis_data[0].keys()
-        with open(output_csv, "w", newline="") as f:
-            dict_writer = csv.DictWriter(f, fieldnames=keys)
-            dict_writer.writeheader()
+    with open(output_csv, "w", newline="") as f:
+        dict_writer = csv.DictWriter(f, fieldnames=REPORT_FIELDS)
+        dict_writer.writeheader()
+        if match_analysis_data:
             dict_writer.writerows(match_analysis_data)
-    else:
-        with open(output_csv, "w"):
-            pass
 
     print("📂 Đã xuất báo cáo phân tích ra file analysis_report.csv và .json")
     return match_analysis_data

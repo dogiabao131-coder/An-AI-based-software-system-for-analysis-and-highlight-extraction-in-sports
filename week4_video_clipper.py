@@ -1,6 +1,8 @@
 from moviepy import VideoFileClip, concatenate_videoclips
 import os
 
+SUMMARY_FILENAME = "final_summary.mp4"
+
 
 def extract_highlights(
     video_path,
@@ -41,7 +43,7 @@ def extract_highlights(
         # Nối tất cả highlight thành 1 video duy nhất
         if clips:
             final_video = concatenate_videoclips(clips)
-            final_path = os.path.join(output_folder, "final_summary.mp4")
+            final_path = os.path.join(output_folder, SUMMARY_FILENAME)
             final_video.write_videofile(final_path, codec="libx264", audio_codec="aac")
             final_video.close()
     finally:

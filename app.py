@@ -4,7 +4,7 @@ import os
 import pandas as pd
 import streamlit as st
 
-from week4_video_clipper import extract_highlights
+from week4_video_clipper import SUMMARY_FILENAME, extract_highlights
 from week5_analysis_system import analyze_video
 
 # Cấu hình trang web
@@ -79,12 +79,14 @@ with col2:
         st.dataframe(df[display_cols] if display_cols else df)
 
         total_goals = len(df)
+        invalid_scorer_ids = []
         if "scorer_track_id" in df.columns:
             unique_scorers = []
             for value in df["scorer_track_id"].dropna().unique():
                 try:
                     unique_scorers.append(int(value))
                 except (TypeError, ValueError):
+                    invalid_scorer_ids.append(value)
                     continue
             unique_scorers = sorted(set(unique_scorers))
         else:
@@ -92,6 +94,11 @@ with col2:
         st.success(f"Tìm thấy {total_goals} pha highlight!")
         if unique_scorers:
             st.info(f"Cầu thủ ghi bàn (track id): {', '.join(map(str, unique_scorers))}")
+        if invalid_scorer_ids:
+            st.caption(
+                "Bỏ qua track id không hợp lệ: "
+                + ", ".join(map(str, invalid_scorer_ids))
+            )
     else:
         st.error("Chưa có dữ liệu phân tích. Hãy chạy AI Scanning trước.")
 
@@ -105,7 +112,7 @@ if not highlight_files and os.path.exists(highlight_folder):
     highlight_files = [
         os.path.join(highlight_folder, f)
         for f in os.listdir(highlight_folder)
-        if f.endswith(".mp4") and not f.startswith("final_summary")
+        if f.endswith(".mp4") and f != SUMMARY_FILENAME
     ]
 
 if highlight_files:
