@@ -128,7 +128,9 @@ with col2:
                 st.session_state.highlight_files = highlight_files
                 st.session_state.summary_path = summary_path
 
-    if st.session_state.analysis_results is not None:
+    if st.session_state.analysis_results is None:
+        st.info("Chưa có dữ liệu phân tích. Hãy chạy AI Scanning trước.")
+    else:
         df = pd.DataFrame(st.session_state.analysis_results)
         display_cols = [
             col
@@ -155,7 +157,10 @@ with col2:
             unique_scorers = sorted(set(unique_scorers))
         else:
             unique_scorers = []
-        st.success(f"Tìm thấy {total_goals} pha highlight!")
+        if total_goals == 0:
+            st.info("Không phát hiện highlight nào trong trận này.")
+        else:
+            st.success(f"Tìm thấy {total_goals} pha highlight!")
         if unique_scorers:
             st.info(f"Cầu thủ ghi bàn (track id): {', '.join(map(str, unique_scorers))}")
         if invalid_scorer_ids:
@@ -163,8 +168,6 @@ with col2:
                 "Bỏ qua track id không hợp lệ: "
                 + ", ".join(map(str, invalid_scorer_ids))
             )
-    else:
-        st.info("Chưa có dữ liệu phân tích. Hãy chạy AI Scanning trước.")
 
 # 3. Khu vực Highlight Clips
 st.markdown("---")

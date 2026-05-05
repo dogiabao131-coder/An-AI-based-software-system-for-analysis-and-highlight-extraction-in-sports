@@ -64,14 +64,8 @@ def extract_jersey_number(frame, player_box):
     config = "--psm 7 -c tessedit_char_whitelist=0123456789"
     try:
         text = pytesseract.image_to_string(roi_thresh, config=config)
-    except (AttributeError, OSError):
+    except (pytesseract.TesseractNotFoundError, AttributeError, OSError):
         return None
-    except Exception as exc:
-        if hasattr(pytesseract, "TesseractNotFoundError") and isinstance(
-            exc, pytesseract.TesseractNotFoundError
-        ):
-            return None
-        raise
     digits = "".join(ch for ch in text if ch.isdigit())
     return digits if digits else None
 
