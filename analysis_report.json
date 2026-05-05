@@ -1,0 +1,12 @@
+[
+    {
+        "event_type": "Goal",
+        "match_time": "00:10",
+        "frame_index": 264,
+        "ball_coordinates": [
+            179.271240234375,
+            455.9478759765625
+        ],
+        "video_file": "video_test.mp4"
+    }
+]

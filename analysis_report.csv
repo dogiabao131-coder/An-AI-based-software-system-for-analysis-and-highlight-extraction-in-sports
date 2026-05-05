@@ -1,0 +1,2 @@
+event_type,match_time,frame_index,ball_coordinates,video_file
+Goal,00:10,264,"[179.271240234375, 455.9478759765625]",video_test.mp4
