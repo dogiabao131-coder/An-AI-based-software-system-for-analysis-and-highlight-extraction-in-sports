@@ -180,10 +180,9 @@ st.markdown("---")
 st.subheader("🎬 Danh sách Highlights")
 
 highlight_files = st.session_state.highlight_files
-if (
-    highlight_files
-    and st.session_state.summary_path is None
-    and st.session_state.highlight_folder
+if highlight_files and st.session_state.highlight_folder and (
+    st.session_state.summary_path is None
+    or not os.path.exists(st.session_state.summary_path)
 ):
     summary_candidate = os.path.join(st.session_state.highlight_folder, SUMMARY_FILENAME)
     if os.path.exists(summary_candidate):
