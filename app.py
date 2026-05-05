@@ -23,10 +23,7 @@ if uploaded_file is not None:
     # Lưu video tạm thời để xử lý
     filename = uploaded_file.name
     extension = os.path.splitext(filename)[1].lower() if filename else ""
-    if not filename:
-        extension = ".mp4"
-        st.sidebar.warning("Không xác định được tên file, sẽ lưu tạm dưới dạng .mp4")
-    elif not extension:
+    if not extension:
         extension = ".mp4"
         st.sidebar.warning("Không tìm thấy phần mở rộng file, sẽ lưu tạm dưới dạng .mp4")
     temp_video_path = f"temp_video{extension}"
