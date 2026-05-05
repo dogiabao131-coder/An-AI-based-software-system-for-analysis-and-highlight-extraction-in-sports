@@ -22,10 +22,10 @@ allowed_extensions = {".mp4", ".avi", ".mov"}
 
 if uploaded_file is not None:
     # Lưu video tạm thời để xử lý
-    filename = uploaded_file.name or ""
+    filename = uploaded_file.name
     extension = os.path.splitext(filename)[1].lower()
     if extension not in allowed_extensions:
-        st.sidebar.error("Định dạng file không hợp lệ. Vui lòng tải .mp4, .avi hoặc .mov.")
+        st.sidebar.error("Định dạng file không hợp lệ. Vui lòng tải mp4, avi hoặc mov.")
     else:
         temp_video_path = f"temp_video{extension}"
         with open(temp_video_path, "wb") as f:
@@ -46,6 +46,8 @@ with col1:
     st.subheader("📺 Video gốc")
     if uploaded_file and temp_video_path:
         st.video(temp_video_path)
+    elif uploaded_file:
+        st.error("Định dạng video không hợp lệ hoặc chưa lưu được file tạm.")
     else:
         st.info("Vui lòng tải video ở thanh bên để bắt đầu.")
 
