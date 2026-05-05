@@ -21,7 +21,10 @@ temp_video_path = None
 
 if uploaded_file is not None:
     # Lưu video tạm thời để xử lý
-    extension = os.path.splitext(uploaded_file.name)[1].lower() or ".mp4"
+    extension = os.path.splitext(uploaded_file.name)[1].lower()
+    if not extension:
+        extension = ".mp4"
+        st.sidebar.warning("Không tìm thấy phần mở rộng file, sẽ lưu tạm dưới dạng .mp4")
     temp_video_path = f"temp_video{extension}"
     with open(temp_video_path, "wb") as f:
         f.write(uploaded_file.read())
@@ -39,7 +42,7 @@ col1, col2 = st.columns([2, 1])
 
 with col1:
     st.subheader("📺 Video gốc")
-    if uploaded_file:
+    if uploaded_file and temp_video_path:
         st.video(temp_video_path)
     else:
         st.info("Vui lòng tải video ở thanh bên để bắt đầu.")
