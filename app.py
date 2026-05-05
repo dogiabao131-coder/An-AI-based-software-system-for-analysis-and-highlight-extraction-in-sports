@@ -62,7 +62,12 @@ with col2:
 
     if st.session_state.analysis_results is None and os.path.exists("analysis_report.json"):
         with open("analysis_report.json", "r") as f:
-            st.session_state.analysis_results = json.load(f)
+            data = json.load(f)
+        for event in data:
+            scorer_id = event.get("scorer_track_id")
+            if isinstance(scorer_id, str) and scorer_id.isdigit():
+                event["scorer_track_id"] = int(scorer_id)
+        st.session_state.analysis_results = data
 
     if st.session_state.analysis_results:
         df = pd.DataFrame(st.session_state.analysis_results)

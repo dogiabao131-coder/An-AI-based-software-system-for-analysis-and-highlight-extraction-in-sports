@@ -62,6 +62,17 @@ def extract_jersey_number(frame, player_box):
     return digits if digits else None
 
 
+def validate_goal_roi(goal_roi):
+    if not isinstance(goal_roi, (list, tuple)) or len(goal_roi) != 4:
+        raise ValueError("goal_roi phải có dạng [x1, y1, x2, y2].")
+
+    x1, y1, x2, y2 = goal_roi
+    if x1 >= x2 or y1 >= y2:
+        raise ValueError("goal_roi không hợp lệ: x1 < x2 và y1 < y2.")
+
+    return [int(x1), int(y1), int(x2), int(y2)]
+
+
 def analyze_video(
     video_path,
     output_json="analysis_report.json",
@@ -72,10 +83,13 @@ def analyze_video(
     display=False,
     enable_ocr=False,
 ):
-    goal_roi = goal_roi or [100, 350, 480, 580]
+    goal_roi = validate_goal_roi(goal_roi or [100, 350, 480, 580])
     model = YOLO(model_path)
     cap = cv2.VideoCapture(video_path)
-    fps = cap.get(cv2.CAP_PROP_FPS) or DEFAULT_FPS
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    if not fps or fps <= 0:
+        print("⚠️ Không lấy được FPS từ video, dùng DEFAULT_FPS.")
+        fps = DEFAULT_FPS
     match_analysis_data = []
     last_goal_frame = -int(fps * cooldown_seconds)
     last_ball_inside = False
@@ -172,6 +186,8 @@ def analyze_video(
         dict_writer.writeheader()
         if match_analysis_data:
             dict_writer.writerows(match_analysis_data)
+        else:
+            print("⚠️ Không phát hiện highlight, CSV chỉ có header.")
 
     print("📂 Đã xuất báo cáo phân tích ra file analysis_report.csv và .json")
     return match_analysis_data
