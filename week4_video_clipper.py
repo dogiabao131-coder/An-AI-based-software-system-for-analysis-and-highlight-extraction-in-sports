@@ -28,7 +28,11 @@ def extract_highlights(
             print(f"Đang cắt đoạn {i+1}: từ {start_time}s đến {end_time}s")
 
             # Cắt clip
-            clip = video.subclip(start_time, end_time)
+            clip = (
+                video.subclip(start_time, end_time)
+                if hasattr(video, "subclip")
+                else video.subclipped(start_time, end_time)
+            )
             clip_name = os.path.join(output_folder, f"highlight_{i+1}.mp4")
             clip.write_videofile(clip_name, codec="libx264", audio_codec="aac")
             clips.append(clip)

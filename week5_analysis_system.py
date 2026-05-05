@@ -162,7 +162,8 @@ def analyze_video(
             dict_writer.writeheader()
             dict_writer.writerows(match_analysis_data)
     else:
-        open(output_csv, "w").close()
+        with open(output_csv, "w"):
+            pass
 
     print("📂 Đã xuất báo cáo phân tích ra file analysis_report.csv và .json")
     return match_analysis_data

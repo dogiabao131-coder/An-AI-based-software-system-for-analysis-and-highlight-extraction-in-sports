@@ -80,9 +80,13 @@ with col2:
 
         total_goals = len(df)
         if "scorer_track_id" in df.columns:
-            unique_scorers = sorted(
-                {int(s) for s in df["scorer_track_id"].dropna().unique()}
-            )
+            unique_scorers = []
+            for value in df["scorer_track_id"].dropna().unique():
+                try:
+                    unique_scorers.append(int(value))
+                except (TypeError, ValueError):
+                    continue
+            unique_scorers = sorted(set(unique_scorers))
         else:
             unique_scorers = []
         st.success(f"Tìm thấy {total_goals} pha highlight!")
