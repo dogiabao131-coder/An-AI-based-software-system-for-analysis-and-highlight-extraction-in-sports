@@ -45,7 +45,12 @@ def extract_jersey_number(frame, player_box):
     if pytesseract is None or player_box is None:
         return None
 
+    height, width = frame.shape[:2]
     x1, y1, x2, y2 = [int(v) for v in player_box]
+    x1 = max(0, min(x1, width - 1))
+    x2 = max(0, min(x2, width))
+    y1 = max(0, min(y1, height - 1))
+    y2 = max(0, min(y2, height))
     if x2 <= x1 or y2 <= y1:
         return None
 
@@ -57,7 +62,16 @@ def extract_jersey_number(frame, player_box):
     roi_resized = cv2.resize(roi_gray, None, fx=2, fy=2, interpolation=cv2.INTER_LINEAR)
     _, roi_thresh = cv2.threshold(roi_resized, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     config = "--psm 7 -c tessedit_char_whitelist=0123456789"
-    text = pytesseract.image_to_string(roi_thresh, config=config)
+    try:
+        text = pytesseract.image_to_string(roi_thresh, config=config)
+    except (AttributeError, OSError):
+        return None
+    except Exception as exc:
+        if hasattr(pytesseract, "TesseractNotFoundError") and isinstance(
+            exc, pytesseract.TesseractNotFoundError
+        ):
+            return None
+        raise
     digits = "".join(ch for ch in text if ch.isdigit())
     return digits if digits else None
 
@@ -108,47 +122,55 @@ def analyze_video(
                 cls_ids = results[0].boxes.cls.cpu().numpy()
                 track_ids = results[0].boxes.id.int().cpu().numpy()
                 ball_seen = False
+                ball_inside_any = False
+                inside_ball_center = None
                 for box, cls in zip(boxes, cls_ids):
                     if cls == 32:  # Quả bóng
                         ball_seen = True
                         x1, y1, x2, y2 = box
                         cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
                         ball_inside = goal_roi[0] < cx < goal_roi[2] and goal_roi[1] < cy < goal_roi[3]
+                        if ball_inside:
+                            ball_inside_any = True
+                            if inside_ball_center is None:
+                                inside_ball_center = (cx, cy)
 
-                        if (
-                            ball_inside
-                            and not last_ball_inside
-                            and frame_index - last_goal_frame > fps * cooldown_seconds
-                        ):
-                            total_seconds = frame_index / fps
-                            minutes = int(total_seconds // 60)
-                            seconds = int(total_seconds % 60)
-                            timestamp_str = f"{minutes:02d}:{seconds:02d}"
+                if (
+                    ball_inside_any
+                    and not last_ball_inside
+                    and frame_index - last_goal_frame > fps * cooldown_seconds
+                    and inside_ball_center is not None
+                ):
+                    total_seconds = frame_index / fps
+                    minutes = int(total_seconds // 60)
+                    seconds = int(total_seconds % 60)
+                    timestamp_str = f"{minutes:02d}:{seconds:02d}"
 
-                            scorer_id, scorer_box = get_scorer_candidate(
-                                (cx, cy), boxes, cls_ids, track_ids
-                            )
-                            jersey_number = (
-                                extract_jersey_number(frame, scorer_box) if enable_ocr else None
-                            )
+                    scorer_id, scorer_box = get_scorer_candidate(
+                        inside_ball_center, boxes, cls_ids, track_ids
+                    )
+                    jersey_number = (
+                        extract_jersey_number(frame, scorer_box) if enable_ocr else None
+                    )
 
-                            event = {
-                                "event_type": "Goal",
-                                "match_time": timestamp_str,
-                                "timestamp_seconds": round(total_seconds, 2),
-                                "frame_index": frame_index,
-                                "ball_coordinates": [float(cx), float(cy)],
-                                "scorer_track_id": scorer_id,
-                                "scorer_jersey_number": jersey_number,
-                                "video_file": os.path.basename(video_path),
-                            }
+                    event = {
+                        "event_type": "Goal",
+                        "match_time": timestamp_str,
+                        "timestamp_seconds": round(total_seconds, 2),
+                        "frame_index": frame_index,
+                        "ball_coordinates": [float(inside_ball_center[0]), float(inside_ball_center[1])],
+                        "scorer_track_id": scorer_id,
+                        "scorer_jersey_number": jersey_number,
+                        "video_file": os.path.basename(video_path),
+                    }
 
-                            match_analysis_data.append(event)
-                            last_goal_frame = frame_index
-                            print(f"✅ Ghi nhận phân tích: Bàn thắng tại phút {timestamp_str}")
+                    match_analysis_data.append(event)
+                    last_goal_frame = frame_index
+                    print(f"✅ Ghi nhận phân tích: Bàn thắng tại phút {timestamp_str}")
 
-                        last_ball_inside = ball_inside
-                if not ball_seen:
+                if ball_seen:
+                    last_ball_inside = ball_inside_any
+                else:
                     last_ball_inside = False
             else:
                 last_ball_inside = False
