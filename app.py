@@ -21,11 +21,12 @@ temp_video_path = None
 
 if uploaded_file is not None:
     # Lưu video tạm thời để xử lý
-    filename = uploaded_file.name or ""
+    filename = uploaded_file.name
     extension = os.path.splitext(filename)[1].lower() if filename else ""
     if not filename:
+        extension = ".mp4"
         st.sidebar.warning("Không xác định được tên file, sẽ lưu tạm dưới dạng .mp4")
-    if not extension:
+    elif not extension:
         extension = ".mp4"
         st.sidebar.warning("Không tìm thấy phần mở rộng file, sẽ lưu tạm dưới dạng .mp4")
     temp_video_path = f"temp_video{extension}"
@@ -55,8 +56,6 @@ with col2:
     if st.button("Bắt đầu phân tích & tạo highlights"):
         if not uploaded_file:
             st.error("Vui lòng tải video trước khi phân tích.")
-        elif not temp_video_path:
-            st.error("Không xác định được đường dẫn video tạm để phân tích.")
         else:
             with st.spinner("AI đang quét trận đấu và cắt highlight..."):
                 data = analyze_video(
