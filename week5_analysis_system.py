@@ -126,8 +126,7 @@ def analyze_video(
                         ball_inside = goal_roi[0] < cx < goal_roi[2] and goal_roi[1] < cy < goal_roi[3]
                         if ball_inside:
                             ball_inside_any = True
-                            if inside_ball_center is None:
-                                inside_ball_center = (cx, cy)
+                            inside_ball_center = (cx, cy)
 
                 if (
                     ball_inside_any

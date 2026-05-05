@@ -51,9 +51,12 @@ if uploaded_file is not None:
             try:
                 os.remove(st.session_state.temp_video_path)
             except OSError:
-                pass
+                print("⚠️ Không thể xóa file video tạm trước đó.")
         if st.session_state.highlight_folder and os.path.exists(st.session_state.highlight_folder):
-            shutil.rmtree(st.session_state.highlight_folder, ignore_errors=True)
+            try:
+                shutil.rmtree(st.session_state.highlight_folder)
+            except OSError:
+                print("⚠️ Không thể xóa thư mục highlight trước đó.")
         st.session_state.analysis_results = None
         st.session_state.highlight_files = []
         st.session_state.summary_path = None
