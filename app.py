@@ -15,22 +15,32 @@ st.markdown("---")
 
 # 1. Sidebar - Nơi tải video và cấu hình
 st.sidebar.header("Cấu hình đầu vào")
-uploaded_file = st.sidebar.file_uploader("Tải lên video trận đấu", type=["mp4", "avi", "mov"])
+allowed_types = ["mp4", "avi", "mov"]
+uploaded_file = st.sidebar.file_uploader("Tải lên video trận đấu", type=allowed_types)
 enable_ocr = st.sidebar.checkbox("Bật OCR số áo (tuỳ chọn)", value=False)
 temp_video_path = None
-allowed_extensions = {".mp4", ".avi", ".mov"}
+upload_error = None
+allowed_extensions = {f".{ext}" for ext in allowed_types}
 
 if uploaded_file is not None:
     # Lưu video tạm thời để xử lý
     filename = uploaded_file.name
     extension = os.path.splitext(filename)[1].lower()
     if extension not in allowed_extensions:
-        st.sidebar.error("Định dạng file không hợp lệ. Vui lòng tải mp4, avi hoặc mov.")
+        upload_error = (
+            "Định dạng file không hợp lệ. Vui lòng tải " + ", ".join(allowed_types) + "."
+        )
+        st.sidebar.error(upload_error)
     else:
         temp_video_path = f"temp_video{extension}"
-        with open(temp_video_path, "wb") as f:
-            f.write(uploaded_file.read())
-        st.sidebar.success("Đã tải video lên thành công!")
+        try:
+            with open(temp_video_path, "wb") as f:
+                f.write(uploaded_file.read())
+            st.sidebar.success("Đã tải video lên thành công!")
+        except OSError:
+            upload_error = "Không thể lưu video tạm thời. Vui lòng thử lại."
+            temp_video_path = None
+            st.sidebar.error(upload_error)
 
 if "analysis_results" not in st.session_state:
     st.session_state.analysis_results = None
@@ -47,7 +57,7 @@ with col1:
     if uploaded_file and temp_video_path:
         st.video(temp_video_path)
     elif uploaded_file:
-        st.error("Định dạng video không hợp lệ hoặc chưa lưu được file tạm.")
+        st.error(upload_error or "Không thể hiển thị video đã tải.")
     else:
         st.info("Vui lòng tải video ở thanh bên để bắt đầu.")
 
@@ -56,8 +66,10 @@ with col2:
     if st.button("Bắt đầu phân tích & tạo highlights"):
         if not uploaded_file:
             st.error("Vui lòng tải video trước khi phân tích.")
+        elif upload_error:
+            st.error(upload_error)
         elif not temp_video_path:
-            st.error("Định dạng video không hợp lệ hoặc chưa lưu được file tạm.")
+            st.error("Không thể lưu video tạm thời để phân tích.")
         else:
             with st.spinner("AI đang quét trận đấu và cắt highlight..."):
                 data = analyze_video(
