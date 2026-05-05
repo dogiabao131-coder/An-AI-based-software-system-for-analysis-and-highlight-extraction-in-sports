@@ -18,18 +18,19 @@ st.sidebar.header("Cấu hình đầu vào")
 uploaded_file = st.sidebar.file_uploader("Tải lên video trận đấu", type=["mp4", "avi", "mov"])
 enable_ocr = st.sidebar.checkbox("Bật OCR số áo (tuỳ chọn)", value=False)
 temp_video_path = None
+allowed_extensions = {".mp4", ".avi", ".mov"}
 
 if uploaded_file is not None:
     # Lưu video tạm thời để xử lý
-    filename = uploaded_file.name
-    extension = os.path.splitext(filename)[1].lower() if filename else ""
-    if not extension:
-        extension = ".mp4"
-        st.sidebar.warning("Không tìm thấy phần mở rộng file, sẽ lưu tạm dưới dạng .mp4")
-    temp_video_path = f"temp_video{extension}"
-    with open(temp_video_path, "wb") as f:
-        f.write(uploaded_file.read())
-    st.sidebar.success("Đã tải video lên thành công!")
+    filename = uploaded_file.name or ""
+    extension = os.path.splitext(filename)[1].lower()
+    if extension not in allowed_extensions:
+        st.sidebar.error("Định dạng file không hợp lệ. Vui lòng tải .mp4, .avi hoặc .mov.")
+    else:
+        temp_video_path = f"temp_video{extension}"
+        with open(temp_video_path, "wb") as f:
+            f.write(uploaded_file.read())
+        st.sidebar.success("Đã tải video lên thành công!")
 
 if "analysis_results" not in st.session_state:
     st.session_state.analysis_results = None
@@ -53,6 +54,8 @@ with col2:
     if st.button("Bắt đầu phân tích & tạo highlights"):
         if not uploaded_file:
             st.error("Vui lòng tải video trước khi phân tích.")
+        elif not temp_video_path:
+            st.error("Định dạng video không hợp lệ hoặc chưa lưu được file tạm.")
         else:
             with st.spinner("AI đang quét trận đấu và cắt highlight..."):
                 data = analyze_video(
