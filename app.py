@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 import uuid
@@ -7,6 +8,8 @@ import streamlit as st
 
 from week4_video_clipper import SUMMARY_FILENAME, extract_highlights
 from week5_analysis_system import analyze_video
+
+logger = logging.getLogger(__name__)
 
 # Cấu hình trang web
 st.set_page_config(page_title="AI Sports Analysis", layout="wide")
@@ -51,12 +54,12 @@ if uploaded_file is not None:
             try:
                 os.remove(st.session_state.temp_video_path)
             except OSError:
-                print("⚠️ Không thể xóa file video tạm trước đó.")
+                logger.warning("Không thể xóa file video tạm trước đó.")
         if st.session_state.highlight_folder and os.path.exists(st.session_state.highlight_folder):
             try:
                 shutil.rmtree(st.session_state.highlight_folder)
             except OSError:
-                print("⚠️ Không thể xóa thư mục highlight trước đó.")
+                logger.warning("Không thể xóa thư mục highlight trước đó.")
         st.session_state.analysis_results = None
         st.session_state.highlight_files = []
         st.session_state.summary_path = None
