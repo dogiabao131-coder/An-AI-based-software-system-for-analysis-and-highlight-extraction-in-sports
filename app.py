@@ -17,10 +17,13 @@ st.markdown("---")
 st.sidebar.header("Cấu hình đầu vào")
 uploaded_file = st.sidebar.file_uploader("Tải lên video trận đấu", type=["mp4", "avi", "mov"])
 enable_ocr = st.sidebar.checkbox("Bật OCR số áo (tuỳ chọn)", value=False)
+temp_video_path = None
 
 if uploaded_file is not None:
     # Lưu video tạm thời để xử lý
-    with open("temp_video.mp4", "wb") as f:
+    extension = os.path.splitext(uploaded_file.name)[1].lower() or ".mp4"
+    temp_video_path = f"temp_video{extension}"
+    with open(temp_video_path, "wb") as f:
         f.write(uploaded_file.read())
     st.sidebar.success("Đã tải video lên thành công!")
 
@@ -37,7 +40,7 @@ col1, col2 = st.columns([2, 1])
 with col1:
     st.subheader("📺 Video gốc")
     if uploaded_file:
-        st.video("temp_video.mp4")
+        st.video(temp_video_path)
     else:
         st.info("Vui lòng tải video ở thanh bên để bắt đầu.")
 
@@ -49,13 +52,13 @@ with col2:
         else:
             with st.spinner("AI đang quét trận đấu và cắt highlight..."):
                 data = analyze_video(
-                    "temp_video.mp4",
+                    temp_video_path,
                     output_json="analysis_report.json",
                     output_csv="analysis_report.csv",
                     enable_ocr=enable_ocr,
                 )
                 timestamps = [event["timestamp_seconds"] for event in data]
-                highlight_files, summary_path = extract_highlights("temp_video.mp4", timestamps)
+                highlight_files, summary_path = extract_highlights(temp_video_path, timestamps)
                 st.session_state.analysis_results = data
                 st.session_state.highlight_files = highlight_files
                 st.session_state.summary_path = summary_path
